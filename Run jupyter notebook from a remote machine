@@ -1,0 +1,11 @@
+## Starting
+
+Step 1 - jupyter notebook --no-browser --port=XXXX (on remote machine)
+
+Step 2 - ssh -N -f -L localhost:XXXX:localhost:XXXX remoteuser@remoteip
+
+
+
+## Stopping
+
+sudo netstat -lpn | grep :XXXX
