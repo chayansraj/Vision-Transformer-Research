@@ -1,15 +1,8 @@
-# %%
+#!/usr/bin/env research
 import pandas as pd
 import numpy as np
 import os
-import PIL
-import PIL.Image
-import tensorflow as tf
-import matplotlib.pyplot as plt
-import seaborn as sns
 import glob, warnings
-import matplotlib.pyplot as plt
-from sklearn.metrics import confusion_matrix, classification_report
 from datasets import load_dataset
 from transformers import ViTFeatureExtractor
 from datasets import load_metric
@@ -160,5 +153,11 @@ trainer.save_state()
 
 # %%
 trainer.predict(prepared_test)
+
+# %% [markdown]
+# #### We can see that the test accuracy is around 86% when we use Vision tranformer with 16 patches. Next, we will try different vit architectures.
+
+# %% [markdown]
+# 
 
 
