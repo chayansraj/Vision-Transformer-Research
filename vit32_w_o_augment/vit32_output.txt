@@ -1,0 +1,28 @@
+2022-12-18 11:58:19.575310: I tensorflow/stream_executor/platform/default/dso_loader.cc:49] Successfully opened dynamic library libcudart.so.10.1
+Resolving data files:   0%|          | 0/2600 [00:00<?, ?it/s]Resolving data files:  81%|████████  | 2110/2600 [00:00<00:00, 20513.32it/s]Resolving data files: 100%|██████████| 2600/2600 [00:00<00:00, 20217.56it/s]
+Using custom data configuration train-5ba040123c4f7080
+Found cached dataset imagefolder (/home/chash345/.cache/huggingface/datasets/imagefolder/train-5ba040123c4f7080/0.0.0/37fbb85cc714a338bea574ac6c7d0b5be5aff46c1862c1989b20e0771199e93f)
+  0%|          | 0/1 [00:00<?, ?it/s]100%|██████████| 1/1 [00:00<00:00, 38.17it/s]
+Resolving data files:   0%|          | 0/870 [00:00<?, ?it/s]Resolving data files: 100%|██████████| 870/870 [00:00<00:00, 19756.39it/s]
+Using custom data configuration valid-1603420759c35bdb
+Found cached dataset imagefolder (/home/chash345/.cache/huggingface/datasets/imagefolder/valid-1603420759c35bdb/0.0.0/37fbb85cc714a338bea574ac6c7d0b5be5aff46c1862c1989b20e0771199e93f)
+  0%|          | 0/1 [00:00<?, ?it/s]100%|██████████| 1/1 [00:00<00:00, 142.55it/s]
+Resolving data files:   0%|          | 0/864 [00:00<?, ?it/s]Resolving data files: 100%|██████████| 864/864 [00:00<00:00, 17994.15it/s]
+Using custom data configuration test-1f68a239285f9c45
+Found cached dataset imagefolder (/home/chash345/.cache/huggingface/datasets/imagefolder/test-1f68a239285f9c45/0.0.0/37fbb85cc714a338bea574ac6c7d0b5be5aff46c1862c1989b20e0771199e93f)
+  0%|          | 0/1 [00:00<?, ?it/s]100%|██████████| 1/1 [00:00<00:00, 239.78it/s]
+Parameter 'transform'=<function preprocess at 0x7f14942558b0> of the transform datasets.arrow_dataset.Dataset.set_format couldn't be hashed properly, a random hash was used instead. Make sure your transforms and parameters are serializable with pickle or dill for the dataset fingerprinting and caching to work. If you reuse this transform, the caching mechanism will consider it to be different from the previous calls and recompute everything. This warning is only showed once. Subsequent hashing failures won't be showed.
+Some weights of the model checkpoint at google/vit-base-patch32-224-in21k were not used when initializing ViTForImageClassification: ['pooler.dense.weight', 'pooler.dense.bias']
+- This IS expected if you are initializing ViTForImageClassification from the checkpoint of a model trained on another task or with another architecture (e.g. initializing a BertForSequenceClassification model from a BertForPreTraining model).
+- This IS NOT expected if you are initializing ViTForImageClassification from the checkpoint of a model that you expect to be exactly identical (initializing a BertForSequenceClassification model from a BertForSequenceClassification model).
+Some weights of ViTForImageClassification were not initialized from the model checkpoint at google/vit-base-patch32-224-in21k and are newly initialized: ['classifier.weight', 'classifier.bias']
+You should probably TRAIN this model on a down-stream task to be able to use it for predictions and inference.
+***** Running training *****
+  Num examples = 2600
+  Num Epochs = 10
+  Instantaneous batch size per device = 16
+  Total train batch size (w. parallel, distributed & accumulation) = 16
+  Gradient Accumulation steps = 1
+  Total optimization steps = 1630
+  Number of trainable parameters = 89454632
+  0%|          | 0/1630 [00:00<?, ?it/s]  0%|          | 1/1630 [00:05<2:39:32,  5.88s/it]  0%|          | 2/1630 [00:12<2:46:08,  6.12s/it]  0%|          | 3/1630 [00:18<2:45:32,  6.10s/it]  0%|          | 4/1630 [00:24<2:46:11,  6.13s/it]  0%|          | 5/1630 [00:30<2:48:12,  6.21s/it]  0%|          | 6/1630 [00:37<2:51:39,  6.34s/it]  0%|          | 7/1630 [00:43<2:49:39,  6.27s/it]  0%|          | 8/1630 [00:49<2:49:52,  6.28s/it]  1%|          | 9/1630 [00:55<2:47:16,  6.19s/it]  1%|          | 10/1630 [01:01<2:46:31,  6.17s/it]                                                     1%|          | 10/1630 [01:01<2:46:31,  6.17s/it]  1%|          | 11/1630 [01:08<2:47:16,  6.20s/it]
