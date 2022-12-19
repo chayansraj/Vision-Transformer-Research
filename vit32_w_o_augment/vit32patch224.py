@@ -27,9 +27,9 @@ warnings.filterwarnings('ignore')
 
 
 # %%
-train = load_dataset('../train')
-valid = load_dataset('../valid')
-test = load_dataset('../test')
+train = load_dataset('/local/data1/chash345/train')
+valid = load_dataset('/local/data1/chash345/valid')
+test = load_dataset('/local/data1/chash345/test')
 
 # %%
 np.count_nonzero(train['train']['label'])
@@ -104,14 +104,14 @@ def compute_metrics(p):
 
 # %%
 training_args = TrainingArguments(
-    output_dir= '../',
+    output_dir= '/local/data1/chash345/Vision-Transformer-Research-Project/vit32_w_o_augment',
     per_device_train_batch_size=16,
     evaluation_strategy='steps',
     num_train_epochs=10,
-    save_steps=100,
-    eval_steps=100,
+    save_steps=200,
+    eval_steps=200,
     logging_steps=10,
-    learning_rate=2e-4,
+    learning_rate=1e-4,
     save_total_limit=2,
     remove_unused_columns=False,
     push_to_hub=False,
@@ -151,13 +151,7 @@ trainer.save_metrics('train', model_results.metrics)
 
 trainer.save_state()
 
-# %%
 trainer.predict(prepared_test)
 
-# %% [markdown]
-# #### We can see that the test accuracy is around 86% when we use Vision tranformer with 16 patches. Next, we will try different vit architectures.
-
-# %% [markdown]
-# 
 
 
