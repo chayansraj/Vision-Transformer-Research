@@ -1,4 +1,4 @@
-s# %%
+# %%
 import numpy as np
 import os
 import PIL
@@ -129,7 +129,7 @@ dict_weights
 # %%
 history = model.fit( train_data, 
 validation_data= val_data, 
-epochs= 10, 
+epochs= 20, 
 verbose=1, 
 class_weight=dict_weights
 )
