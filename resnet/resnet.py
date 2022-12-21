@@ -144,7 +144,5 @@ roc_auc_score(test_data.classes, predicted_probs )
 # %%
 roc_auc_score(test_data.classes, predcited_classes )
 
-# %%
-plt.plot(fpr,tpr)
 
 
