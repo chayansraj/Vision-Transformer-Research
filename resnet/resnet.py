@@ -42,7 +42,7 @@ train_data = datagenerator.flow_from_directory('/local/data1/chash345/train',
     target_size=(224, 224), 
     batch_size=32, 
     shuffle=True,
-    color_mode='rgb'
+    #color_mode='rgb'
 )
 
 
@@ -52,7 +52,7 @@ val_data = datagenerator.flow_from_directory('/local/data1/chash345/valid',
     target_size=(224, 224),
     batch_size=32, 
     shuffle=False,
-    color_mode='rgb'
+    #color_mode='rgb'
 )
 
 
@@ -62,7 +62,7 @@ test_data = datagenerator.flow_from_directory('/local/data1/chash345/test',
     target_size=(224, 224),
     batch_size=1, 
     shuffle=False,
-    color_mode='rgb'
+    #color_mode='rgb'
 )
 
 # %%
@@ -90,15 +90,15 @@ pre_trained_model_resnet152 = ResNet152(input_shape=(224,224,3),
 for layer in pre_trained_model_resnet152.layers:
     layer.trainable=False
 
-tf.random.set_seed(150)
+tf.random.set_seed(10)
 
 model = tf.keras.models.Sequential([
     pre_trained_model_resnet152,
     GlobalAveragePooling2D(),    
     Dense(512,activation="relu"),
     Dropout(0.4),
-    Dense(256,activation="relu"),
-    Dropout(0.4),
+    #Dense(256,activation="relu"),
+    #Dropout(0.4),
     Dense(128, activation='swish'),  
     Dense(1, activation='sigmoid')
 ])
