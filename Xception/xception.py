@@ -140,27 +140,27 @@ reconstructed_model = keras.models.load_model("saved_model")
 
 # %%
 # Predict classes from this reconstructed model
-predcited_classes = reconstructed_model.predict_classes(test_dataset)
+predcited_classes = reconstructed_model.predict_classes(test_data)
 
 # %%
 # Predict class probabilities from this reconstructed model
-predicted_probs = reconstructed_model.predict(test_dataset)
+predicted_probs = reconstructed_model.predict(test_data)
 
 # %%
 # %%
 from sklearn.metrics import roc_auc_score, roc_curve, RocCurveDisplay, auc
 
 # %%
-fpr, tpr, thresholds = roc_curve(test_dataset.classes, predcited_classes)
+fpr, tpr, thresholds = roc_curve(test_data.classes, predcited_classes)
 
 # %%
 # %%
-roc_auc_score(test_dataset.classes, predicted_probs )
+roc_auc_score(test_data.classes, predicted_probs )
 
 
 # %%
 # %%
-roc_auc_score(test_dataset.classes, predcited_classes )
+roc_auc_score(test_data.classes, predcited_classes )
 
 # %%
 roc_auc = auc(fpr, tpr)

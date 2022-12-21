@@ -1,0 +1,52 @@
+2022-12-21 14:00:47.986926: I tensorflow/stream_executor/platform/default/dso_loader.cc:49] Successfully opened dynamic library libcudart.so.10.1
+2022-12-21 14:00:53.178093: I tensorflow/compiler/jit/xla_cpu_device.cc:41] Not creating XLA devices, tf_xla_enable_xla_devices not set
+2022-12-21 14:00:53.210706: I tensorflow/stream_executor/platform/default/dso_loader.cc:49] Successfully opened dynamic library libcuda.so.1
+2022-12-21 14:00:53.226358: E tensorflow/stream_executor/cuda/cuda_driver.cc:328] failed call to cuInit: CUDA_ERROR_NO_DEVICE: no CUDA-capable device is detected
+2022-12-21 14:00:53.226437: I tensorflow/stream_executor/cuda/cuda_diagnostics.cc:169] retrieving CUDA diagnostic information for host: lnx00273.ad.liu.se
+2022-12-21 14:00:53.226468: I tensorflow/stream_executor/cuda/cuda_diagnostics.cc:176] hostname: lnx00273.ad.liu.se
+2022-12-21 14:00:53.226600: I tensorflow/stream_executor/cuda/cuda_diagnostics.cc:200] libcuda reported version is: 525.60.11
+2022-12-21 14:00:53.226697: I tensorflow/stream_executor/cuda/cuda_diagnostics.cc:204] kernel reported version is: 525.60.11
+2022-12-21 14:00:53.226726: I tensorflow/stream_executor/cuda/cuda_diagnostics.cc:310] kernel version seems to match DSO: 525.60.11
+Clipping input data to the valid range for imshow with RGB data ([0..1] for floats or [0..255] for integers).
+2022-12-21 14:00:57.129591: I tensorflow/core/platform/cpu_feature_guard.cc:142] This TensorFlow binary is optimized with oneAPI Deep Neural Network Library (oneDNN) to use the following CPU instructions in performance-critical operations:  SSE4.1 SSE4.2 AVX AVX2 FMA
+To enable them in other operations, rebuild TensorFlow with the appropriate compiler flags.
+2022-12-21 14:00:57.129852: I tensorflow/compiler/jit/xla_gpu_device.cc:99] Not creating XLA devices, tf_xla_enable_xla_devices not set
+2022-12-21 14:01:05.366001: W tensorflow/core/framework/cpu_allocator_impl.cc:80] Allocation of 34329984 exceeds 10% of free system memory.
+2022-12-21 14:01:05.520202: I tensorflow/compiler/mlir/mlir_graph_optimization_pass.cc:116] None of the MLIR optimization passes are enabled (registered 2)
+2022-12-21 14:01:05.520609: I tensorflow/core/platform/profile_utils/cpu_utils.cc:112] CPU Frequency: 3492035000 Hz
+2022-12-21 14:01:12.649679: W tensorflow/core/framework/cpu_allocator_impl.cc:80] Allocation of 34329984 exceeds 10% of free system memory.
+2022-12-21 14:01:12.704529: W tensorflow/core/framework/cpu_allocator_impl.cc:80] Allocation of 90935296 exceeds 10% of free system memory.
+2022-12-21 14:01:12.771848: W tensorflow/core/framework/cpu_allocator_impl.cc:80] Allocation of 177020928 exceeds 10% of free system memory.
+2022-12-21 14:01:12.907884: W tensorflow/core/framework/cpu_allocator_impl.cc:80] Allocation of 89718784 exceeds 10% of free system memory.
+Found 2600 images belonging to 2 classes.
+Found 870 images belonging to 2 classes.
+Found 864 images belonging to 2 classes.
+The dimensions of the image are 299 pixels width and 299 pixels height, one single color channel.
+The maximum pixel value is 1.0000 and the minimum is -1.0000
+The mean value of the pixels is -0.1825 and the standard deviation is 0.6687
+Model: "model"
+_________________________________________________________________
+Layer (type)                 Output Shape              Param #   
+=================================================================
+input_2 (InputLayer)         [(None, 299, 299, 3)]     0         
+_________________________________________________________________
+normalization (Normalization (None, 299, 299, 3)       7         
+_________________________________________________________________
+xception (Functional)        (None, 10, 10, 2048)      20861480  
+_________________________________________________________________
+global_average_pooling2d (Gl (None, 2048)              0         
+_________________________________________________________________
+dense (Dense)                (None, 128)               262272    
+_________________________________________________________________
+dropout (Dropout)            (None, 128)               0         
+_________________________________________________________________
+dense_1 (Dense)              (None, 128)               16512     
+_________________________________________________________________
+dense_2 (Dense)              (None, 1)                 129       
+=================================================================
+Total params: 21,140,400
+Trainable params: 3,445,633
+Non-trainable params: 17,694,767
+_________________________________________________________________
+Epoch 1/20
+ 1/82 [..............................] - ETA: 16:04 - loss: 0.4350 - binary_accuracy: 0.5625 2/82 [..............................] - ETA: 8:40 - loss: 1.0901 - binary_accuracy: 0.4219  3/82 [>.............................] - ETA: 8:37 - loss: 1.1511 - binary_accuracy: 0.4549 4/82 [>.............................] - ETA: 8:05 - loss: 1.1245 - binary_accuracy: 0.5013 5/82 [>.............................] - ETA: 7:55 - loss: 1.0811 - binary_accuracy: 0.5435 6/82 [=>............................] - ETA: 8:02 - loss: 1.0368 - binary_accuracy: 0.5797 7/82 [=>............................] - ETA: 7:55 - loss: 0.9948 - binary_accuracy: 0.6104 8/82 [=>............................] - ETA: 7:47 - loss: 0.9558 - binary_accuracy: 0.6366 9/82 [==>...........................] - ETA: 7:41 - loss: 0.9195 - binary_accuracy: 0.659310/82 [==>...........................] - ETA: 7:37 - loss: 0.8854 - binary_accuracy: 0.6790
