@@ -3,67 +3,55 @@ import numpy as np
 import os
 import PIL
 import PIL.Image
+import matplotlib.pyplot as plt
 import tensorflow as tf
 os.environ['CUDA_VISIBLE_DEVICES'] = '-1'
 
+
 # Hide GPU from visible devices
 tf.config.set_visible_devices([], 'GPU')
-import matplotlib.pyplot as plt
-import seaborn as sns
 from tensorflow import keras
 from tensorflow.keras import layers
-from tensorflow.keras.preprocessing.image import ImageDataGenerator
-from tensorflow.keras.applications.resnet import ResNet152, preprocess_input
 from tensorflow.keras.layers import Conv2D, MaxPooling2D, Flatten, Dropout, Dense, BatchNormalization, GlobalAveragePooling2D
 from tensorflow.keras.activations import relu, softmax, sigmoid, swish
 from tensorflow.keras.optimizers import RMSprop
+from tensorflow.keras.preprocessing.image import ImageDataGenerator
+from tensorflow.keras.applications.xception import preprocess_input, Xception
 from tensorflow.keras.preprocessing import image
 
-
-
 # %%
-datagenerator = ImageDataGenerator(
+datagenerator_train = ImageDataGenerator(
     preprocessing_function=preprocess_input,
     horizontal_flip=True,
-    rotation_range=20,
-    vertical_flip=True,
-    width_shift_range=0.1,
-    #featurewise_center=True,
-    #samplewise_center=True,
-    #samplewise_std_normalization=True,
-    brightness_range=[0.90,1.25],
-    #fill_mode='nearest'
+    rotation_range=30,
+    vertical_flip=False,
+    #brightness_range=[0.90,1.25],
+    fill_mode='nearest'
 )
+
+datagenerator = ImageDataGenerator(preprocessing_function=preprocess_input)
 
 # %%
 # load and iterate training dataset
-train_data = datagenerator.flow_from_directory('/local/data1/chash345/train', 
+train_data = datagenerator_train.flow_from_directory('/local/data1/chash345/train', 
     class_mode='binary',
-    target_size=(224, 224), 
+    target_size=(299, 299), 
     batch_size=32, 
-    shuffle=True,
-    #color_mode='rgb'
-)
-
+    shuffle=False)
 
 # load and iterate validation dataset
 val_data = datagenerator.flow_from_directory('/local/data1/chash345/valid', 
     class_mode='binary',
-    target_size=(224, 224),
+    target_size=(299, 299),
     batch_size=32, 
-    shuffle=False,
-    #color_mode='rgb'
-)
-
+    shuffle=False)
 
 # load and iterate test dataset
 test_data = datagenerator.flow_from_directory('/local/data1/chash345/test', 
     class_mode='binary',
-    target_size=(224, 224),
-    batch_size=1, 
-    shuffle=False,
-    #color_mode='rgb'
-)
+    target_size=(299, 299),
+    batch_size=32, 
+    shuffle=False)
 
 # %%
 #sns.set_style('white')
@@ -81,31 +69,49 @@ print(f"The mean value of the pixels is {generated_image.mean():.4f} and the sta
 generated_image.shape
 
 # %%
-pre_trained_model_resnet152 = ResNet152(input_shape=(224,224,3),
-                                include_top=False,
-                                weights="imagenet")
+pre_trained_model_xception = Xception(
+    input_shape=(299,299,3),
+    include_top=False,
+    weights="imagenet")
 
 # %%
 # Some weights in later layers are unfreezed
-for layer in pre_trained_model_resnet152.layers:
+for layer in pre_trained_model_xception.layers[:-5]:
     layer.trainable=False
 
 tf.random.set_seed(10)
 
-model = tf.keras.models.Sequential([
-    pre_trained_model_resnet152,
-    GlobalAveragePooling2D(),    
-    Dense(512,activation="relu"),
-    Dropout(0.4),
-    #Dense(256,activation="relu"),
-    #Dropout(0.4),
-    Dense(128, activation='swish'),  
-    Dense(1, activation='sigmoid')
-])
+inputs = keras.Input(shape=(299,299,3))
+norm_layer = keras.layers.experimental.preprocessing.Normalization()
+mean = np.array([127.5]*3)
+var = mean ** 2
+x = norm_layer(inputs)
+norm_layer.set_weights([mean , var])
 
-model.compile(optimizer=RMSprop(learning_rate=1e-4),
-              loss="binary_crossentropy",
-              metrics=['accuracy'])
+x = pre_trained_model_xception(x, training=False)
+x = GlobalAveragePooling2D()(x)
+x = Dense(128,activation='relu')(x)
+x = Dropout(0.4)(x)
+x = Dense(128,activation='relu')(x)
+outputs = Dense(1, activation='sigmoid')(x)
+
+model = keras.Model(inputs, outputs)
+
+
+# model = tf.keras.models.Sequential([
+#     pre_trained_model_xception,
+#     Flatten(),    
+#     Dense(256,activation="swish"),
+#     Dropout(0.4),
+#     Dense(256,activation="swish"),
+#     Dropout(0.4),
+#     Dense(128, activation='swish'),  
+#     Dense(1, activation='sigmoid')
+# ])
+
+model.compile(optimizer=keras.optimizers.Adam(),
+              loss=keras.losses.BinaryCrossentropy(from_logits=True),
+              metrics=[keras.metrics.BinaryAccuracy()])
 
 # %%
 model.summary()
@@ -117,36 +123,51 @@ dict_weights = {0: weights[0], 1:weights[1]}
 dict_weights
 
 # %%
-history = model.fit( train_data, 
-validation_data= val_data, 
-epochs= 20, 
-verbose=1, 
-class_weight=dict_weights
+history = model.fit(
+    train_data,
+    epochs=20,
+    validation_data=val_data,
+    class_weight=dict_weights  
 )
 
 # %%
+# save the model weights after training
 model = model.save('saved_model')
 
 # %%
+# Load the saved model anytime for inference
 reconstructed_model = keras.models.load_model("saved_model")
 
 # %%
+# Predict classes from this reconstructed model
 predcited_classes = reconstructed_model.predict_classes(test_data)
 
 # %%
+# Predict class probabilities from this reconstructed model
 predicted_probs = reconstructed_model.predict(test_data)
 
 # %%
-from sklearn.metrics import roc_auc_score, roc_curve
+# %%
+from sklearn.metrics import roc_auc_score, roc_curve, RocCurveDisplay, auc
 
 # %%
 fpr, tpr, thresholds = roc_curve(test_data.classes, predcited_classes)
 
 # %%
+# %%
 roc_auc_score(test_data.classes, predicted_probs )
 
+
+# %%
 # %%
 roc_auc_score(test_data.classes, predcited_classes )
 
+# %%
+roc_auc = auc(fpr, tpr)
+
+# %%
+display = RocCurveDisplay(fpr=fpr,tpr=tpr, roc_auc=roc_auc)
+display.plot()
+plt.show()
 
 
