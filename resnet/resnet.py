@@ -4,6 +4,10 @@ import os
 import PIL
 import PIL.Image
 import tensorflow as tf
+os.environ['CUDA_VISIBLE_DEVICES'] = '-1'
+
+# Hide GPU from visible devices
+tf.config.set_visible_devices([], 'GPU')
 import matplotlib.pyplot as plt
 import seaborn as sns
 from tensorflow import keras
@@ -48,7 +52,7 @@ val_data = datagenerator.flow_from_directory('/local/data1/chash345/valid',
     target_size=(224, 224),
     batch_size=32, 
     shuffle=False,
-    #color_mode='rgb'
+    color_mode='rgb'
 )
 
 
@@ -58,7 +62,7 @@ test_data = datagenerator.flow_from_directory('/local/data1/chash345/test',
     target_size=(224, 224),
     batch_size=1, 
     shuffle=False,
-    #color_mode='rgb'
+    color_mode='rgb'
 )
 
 # %%
