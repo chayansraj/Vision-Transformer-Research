@@ -15,21 +15,7 @@ from tensorflow.keras.activations import relu, softmax, sigmoid, swish
 from tensorflow.keras.optimizers import RMSprop
 from tensorflow.keras.preprocessing import image
 
-# %%
-import warnings
 
-# Ignore FutureWarning from numpy
-warnings.simplefilter(action='ignore', category=FutureWarning)
-
-os.environ["CUDA_DEVICE_ORDER"]="PCI_BUS_ID";
-
-# The GPU id to use, usually either "0" or "1";
-os.environ["CUDA_VISIBLE_DEVICES"]="0";
-
-# Allow growth of GPU memory, otherwise it will always look like all the memory is being used
-physical_devices = tf.config.experimental.list_physical_devices('GPU')
-
-tf.config.experimental.set_memory_growth(physical_devices[0], True)
 
 # %%
 datagenerator = ImageDataGenerator(
