@@ -40,7 +40,7 @@ image_generator = ImageDataGenerator(rescale=1/255, validation_split=0, shear_ra
 train_dataset = image_generator.flow_from_directory(batch_size=32,
                                                  directory='/local/data1/chash345/train',
                                                  shuffle=True,
-                                                 target_size=(224,224), 
+                                                 target_size=(299,299), 
                                                  class_mode='binary')
 
 image_generator = ImageDataGenerator(rescale=1/255) 
@@ -48,14 +48,14 @@ image_generator = ImageDataGenerator(rescale=1/255)
 validation_dataset = image_generator.flow_from_directory(batch_size=32,
                                                  directory='/local/data1/chash345/valid',
                                                  shuffle=False,
-                                                 target_size=(224,224),
+                                                 target_size=(299,299),
                                                  class_mode='binary')
 
 
 test_dataset = image_generator.flow_from_directory(
                                                  directory='/local/data1/chash345/test',
                                                  shuffle=False,
-                                                 target_size=(224,224), 
+                                                 target_size=(299,299), 
                                                  class_mode=None)
 
 # %%
@@ -64,24 +64,23 @@ generated_image, label = train_dataset.__getitem__(20)
 plt.imshow(generated_image[7])
 
 plt.colorbar()
-plt.title('Raw Chest X Ray Image')
+plt.title('Raw femoral fracture X Ray Image')
 
-print(f"The dimensions of the image are {generated_image.shape[1]} pixels width and {generated_image.shape[2]} pixels height, one single color channel.")
+print(f"The dimensions of the image are {generated_image.shape[1]} pixels width and {generated_image.shape[2]} pixels height, three single color channel.")
 print(f"The maximum pixel value is {generated_image.max():.4f} and the minimum is {generated_image.min():.4f}")
 print(f"The mean value of the pixels is {generated_image.mean():.4f} and the standard deviation is {generated_image.std():.4f}")
 
 # %%
-inceptionv3_radimagenet = tf.keras.models.load_model('/local/data1/chash345/Computer-Vision-Research-Project/InceptionV3/RadImageNet-InceptionV3_notop.h5')
-
+inceptionv3 = InceptionV3(input_shape= (299,299,3), include_top=False, weights= 'imagenet' )
 # %%
-for layer in inceptionv3_radimagenet.layers:
+for layer in inceptionv3.layers:
     layer.trainable = False
 #x = Flatten()(model_inception.output)
 
 tf.random.set_seed(150)
 
 model = tf.keras.models.Sequential([
-    inceptionv3_radimagenet,
+    inceptionv3,
     GlobalAveragePooling2D(),    
     Dense(512,activation="relu"),
     Dropout(0.4),
