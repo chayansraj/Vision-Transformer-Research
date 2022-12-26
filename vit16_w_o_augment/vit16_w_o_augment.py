@@ -102,11 +102,11 @@ def compute_metrics(p):
 
 # %%
 training_args = TrainingArguments(
-    output_dir= '/local/data1/chash345/Vision-Transformer-Research-Project/vit16_w_o_augment',
-    seed=42,
+    output_dir= '/local/data1/chash345/vit16_w_o_augment_model/',
+    seed=10,
     per_device_train_batch_size=16,
     evaluation_strategy='steps',
-    num_train_epochs=10,
+    num_train_epochs=25,
     save_steps=200,
     eval_steps=200,
     logging_steps=10,
