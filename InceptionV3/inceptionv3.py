@@ -47,7 +47,7 @@ image_generator = ImageDataGenerator(rescale=1/255)
 
 validation_dataset = image_generator.flow_from_directory(batch_size=32,
                                                  directory='/local/data1/chash345/valid',
-                                                 shuffle=True,
+                                                 shuffle=False,
                                                  target_size=(224,224),
                                                  class_mode='binary')
 
@@ -71,16 +71,17 @@ print(f"The maximum pixel value is {generated_image.max():.4f} and the minimum i
 print(f"The mean value of the pixels is {generated_image.mean():.4f} and the standard deviation is {generated_image.std():.4f}")
 
 # %%
-model_inception = InceptionV3(input_shape=(224,224,3), weights='imagenet', include_top=False)
+inceptionv3_radimagenet = tf.keras.models.load_model('/local/data1/chash345/Computer-Vision-Research-Project/InceptionV3/RadImageNet-InceptionV3_notop.h5')
 
-for layer in model_inception.layers:
+# %%
+for layer in inceptionv3_radimagenet.layers:
     layer.trainable = False
 #x = Flatten()(model_inception.output)
 
 tf.random.set_seed(150)
 
 model = tf.keras.models.Sequential([
-    model_inception,
+    inceptionv3_radimagenet,
     GlobalAveragePooling2D(),    
     Dense(512,activation="relu"),
     Dropout(0.4),
@@ -115,30 +116,41 @@ class_weight=dict_weights
 # save the model weights after training
 model = model.save('saved_model')
 
+# %%
 # Load the saved model anytime for inference
 reconstructed_model = keras.models.load_model("saved_model")
 
+# %%
 # Predict classes from this reconstructed model
 predcited_classes = reconstructed_model.predict_classes(test_dataset)
 
+# %%
 # Predict class probabilities from this reconstructed model
 predicted_probs = reconstructed_model.predict(test_dataset)
 
 # %%
-from sklearn.metrics import roc_auc_score, roc_curve
+# %%
+from sklearn.metrics import roc_auc_score, roc_curve, RocCurveDisplay, auc
 
 # %%
 fpr, tpr, thresholds = roc_curve(test_dataset.classes, predcited_classes)
 
 # %%
+# %%
 roc_auc_score(test_dataset.classes, predicted_probs )
 
+
+# %%
 # %%
 roc_auc_score(test_dataset.classes, predcited_classes )
 
+# %%
+roc_auc = auc(fpr, tpr)
 
 # %%
-
+display = RocCurveDisplay(fpr=fpr,tpr=tpr, roc_auc=roc_auc)
+display.plot()
+plt.show()
 
 # %%
 
