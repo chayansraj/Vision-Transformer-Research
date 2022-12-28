@@ -1,0 +1,1 @@
+2022-12-28 22:01:06.166927: I tensorflow/stream_executor/platform/default/dso_loader.cc:49] Successfully opened dynamic library libcudart.so.10.1
