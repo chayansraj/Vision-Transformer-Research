@@ -13,13 +13,11 @@ import seaborn as sns
 from tensorflow import keras
 from tensorflow.keras import layers
 from tensorflow.keras.preprocessing.image import ImageDataGenerator
-from tensorflow.keras.applications.resnet import ResNet152, preprocess_input
+from tensorflow.keras.applications.resnet import ResNet101  , preprocess_input
 from tensorflow.keras.layers import Conv2D, MaxPooling2D, Flatten, Dropout, Dense, BatchNormalization, GlobalAveragePooling2D
 from tensorflow.keras.activations import relu, softmax, sigmoid, swish
 from tensorflow.keras.optimizers import RMSprop
 from tensorflow.keras.preprocessing import image
-
-
 
 # %%
 datagenerator = ImageDataGenerator(
@@ -58,7 +56,7 @@ val_data = datagenerator.flow_from_directory('/local/data1/chash345/valid',
 
 # load and iterate test dataset
 test_data = datagenerator.flow_from_directory('/local/data1/chash345/test', 
-    class_mode='binary',
+    class_mode= None,
     target_size=(224, 224),
     batch_size=1, 
     shuffle=False,
@@ -71,7 +69,7 @@ generated_image, label = train_data.__getitem__(20)
 plt.imshow(generated_image[7])
 
 plt.colorbar()
-plt.title('Raw Chest X Ray Image')
+plt.title('Raw fracture X Ray Image')
 
 print(f"The dimensions of the image are {generated_image.shape[1]} pixels width and {generated_image.shape[2]} pixels height, one single color channel.")
 print(f"The maximum pixel value is {generated_image.max():.4f} and the minimum is {generated_image.min():.4f}")
@@ -81,7 +79,7 @@ print(f"The mean value of the pixels is {generated_image.mean():.4f} and the sta
 generated_image.shape
 
 # %%
-pre_trained_model_resnet152 = ResNet152(input_shape=(224,224,3),
+pre_trained_model_resnet152 = ResNet101(input_shape=(224,224,3),
                                 include_top=False,
                                 weights="imagenet")
 
@@ -90,7 +88,7 @@ pre_trained_model_resnet152 = ResNet152(input_shape=(224,224,3),
 for layer in pre_trained_model_resnet152.layers:
     layer.trainable=False
 
-tf.random.set_seed(10)
+tf.random.set_seed(150)
 
 model = tf.keras.models.Sequential([
     pre_trained_model_resnet152,
@@ -127,6 +125,7 @@ class_weight=dict_weights
 # %%
 model = model.save('saved_model')
 
+
 # %%
 reconstructed_model = keras.models.load_model("saved_model")
 
@@ -137,16 +136,30 @@ predcited_classes = reconstructed_model.predict_classes(test_data)
 predicted_probs = reconstructed_model.predict(test_data)
 
 # %%
-from sklearn.metrics import roc_auc_score, roc_curve
+# %%
+from sklearn.metrics import roc_auc_score, roc_curve, RocCurveDisplay, auc
 
 # %%
 fpr, tpr, thresholds = roc_curve(test_data.classes, predcited_classes)
 
 # %%
+# %%
 roc_auc_score(test_data.classes, predicted_probs )
 
+
+# %%
 # %%
 roc_auc_score(test_data.classes, predcited_classes )
+
+# %%
+roc_auc = auc(fpr, tpr)
+
+# %%
+display = RocCurveDisplay(fpr=fpr,tpr=tpr, roc_auc=roc_auc)
+display.plot()
+plt.show()
+
+# %%
 
 
 
