@@ -104,7 +104,7 @@ dict_weights
 # %%
 history = model.fit(
     train_data,
-    epochs=20,
+    epochs=50,
     validation_data=val_data, 
     class_weight=dict_weights 
 )
