@@ -104,14 +104,13 @@ def compute_metrics(p):
 # %%
 training_args = TrainingArguments(
     output_dir= '/local/data1/chash345/vit16_w_o_augment_model/',
-    seed=42,
     per_device_train_batch_size=16,
     evaluation_strategy='steps',
-    num_train_epochs=10,
-    save_steps=200,
-    eval_steps=200,
+    num_train_epochs=50,
+    save_steps=300,
+    eval_steps=300,
     logging_steps=10,
-    learning_rate=1e-4,
+    learning_rate=2e-4,
     save_total_limit=2,
     remove_unused_columns=False,
     push_to_hub=False,
