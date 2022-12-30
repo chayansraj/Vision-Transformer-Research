@@ -4,6 +4,10 @@ import os
 import PIL
 import PIL.Image
 import tensorflow as tf
+os.environ['CUDA_VISIBLE_DEVICES'] = '-1'
+
+# Hide GPU from visible devices
+tf.config.set_visible_devices([], 'GPU')
 import matplotlib.pyplot as plt
 from tensorflow import keras
 from tensorflow.keras import layers
@@ -11,61 +15,38 @@ from tensorflow.keras.preprocessing.image import ImageDataGenerator
 from tensorflow.keras.layers import Conv2D, MaxPooling2D, Flatten, Dropout, Dense, BatchNormalization, GlobalAveragePooling2D
 from tensorflow.keras.activations import relu, softmax, sigmoid, swish
 from tensorflow.keras.optimizers import RMSprop
-from tensorflow.keras.applications.vgg16 import VGG16
+from tensorflow.keras.applications.vgg19 import VGG19
 from tensorflow.keras.applications.resnet50  import preprocess_input
 
 # %%
-import warnings
-
-# Ignore FutureWarning from numpy
-warnings.simplefilter(action='ignore', category=FutureWarning)
-
-os.environ["CUDA_DEVICE_ORDER"]="PCI_BUS_ID";
-
-# The GPU id to use, usually either "0" or "1";
-os.environ["CUDA_VISIBLE_DEVICES"]="0";
-
-# Allow growth of GPU memory, otherwise it will always look like all the memory is being used
-physical_devices = tf.config.experimental.list_physical_devices('GPU')
-
-tf.config.experimental.set_memory_growth(physical_devices[0], True)
-
-# %%
-datagenerator = ImageDataGenerator(
-    preprocessing_function=preprocess_input,
-    horizontal_flip=True,
-    rotation_range=30,
-    vertical_flip=True,
-    #brightness_range=[0.90,1.45],
-    samplewise_center=True,
-    samplewise_std_normalization=True
-    #fill_mode='nearest'
-)
+train_datagen = ImageDataGenerator(rescale = 1./255, shear_range = 0.2, zoom_range = 0.2, horizontal_flip = True, vertical_flip=True )
+validation_datagen = ImageDataGenerator(rescale = 1./255)
+test_datagen = ImageDataGenerator(rescale = 1./255)
 
 # %%
 # load and iterate training dataset
-train_data = datagenerator.flow_from_directory('/local/data1/chash345/train', 
+train_data = train_datagen.flow_from_directory('/local/data1/chash345/train', 
     class_mode='binary',
-    target_size=(250, 250), 
+    target_size=(224, 224), 
     batch_size=32, 
     shuffle=False,
     color_mode='rgb'
 )
 
 # load and iterate validation dataset
-val_data = datagenerator.flow_from_directory('/local/data1/chash345/valid', 
+val_data = validation_datagen.flow_from_directory('/local/data1/chash345/valid', 
     class_mode='binary',
-    target_size=(250, 250),
-    batch_size=1, 
+    target_size=(224, 224),
+    batch_size=32, 
     shuffle=False,
     color_mode='rgb'
 )
 
 # load and iterate test dataset
-test_data = datagenerator.flow_from_directory('/local/data1/chash345/test', 
+test_data = test_datagen.flow_from_directory('/local/data1/chash345/test', 
     class_mode='binary',
-    target_size=(250, 250),
-    batch_size=1, 
+    target_size=(224, 224),
+    batch_size=8, 
     shuffle=False,
     color_mode='rgb'
 )
@@ -86,7 +67,7 @@ print(f"The mean value of the pixels is {generated_image.mean():.4f} and the sta
 generated_image.shape
 
 # %%
-pre_trained_model = VGG16(input_shape=(250,250,3),
+pre_trained_model = VGG19(input_shape=(224,224,3),
                                 include_top=False,
                                 weights="imagenet")
 
@@ -94,7 +75,7 @@ pre_trained_model = VGG16(input_shape=(250,250,3),
 for layer in pre_trained_model.layers[:-5]:
     layer.trainable=False
 
-tf.random.set_seed(200)
+tf.random.set_seed(100)
 
 model = tf.keras.models.Sequential([
     pre_trained_model,
@@ -123,7 +104,7 @@ dict_weights
 # %%
 history = model.fit(
     train_data,
-    epochs=10,
+    epochs=50,
     validation_data=val_data, 
     class_weight=dict_weights 
 )
