@@ -4,10 +4,10 @@ import os
 import PIL
 import PIL.Image
 import tensorflow as tf
-os.environ['CUDA_VISIBLE_DEVICES'] = '-1'
+# os.environ['CUDA_VISIBLE_DEVICES'] = '-1'
 
-# Hide GPU from visible devices
-tf.config.set_visible_devices([], 'GPU')
+# # Hide GPU from visible devices
+# tf.config.set_visible_devices([], 'GPU')
 import matplotlib.pyplot as plt
 import seaborn as sns
 from tensorflow import keras
