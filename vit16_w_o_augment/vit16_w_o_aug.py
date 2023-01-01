@@ -1,4 +1,4 @@
-#!/usr/bin/env research
+# %%
 import pandas as pd
 import numpy as np
 import os
@@ -7,11 +7,10 @@ import PIL.Image
 import glob, warnings
 from sklearn.metrics import confusion_matrix, classification_report
 from datasets import load_dataset
-from transformers import ViTFeatureExtractor
+from transformers import ViTFeatureExtractor, AutoModelForImageClassification
 from datasets import load_metric
-from transformers import TrainingArguments, Trainer
-from transformers import ViTForImageClassification
-
+from transformers import TrainingArguments
+from transformers import Trainer
 
 import torch
 from torch import nn, optim
@@ -29,6 +28,9 @@ use_cuda = torch.cuda.is_available()
 
 warnings.filterwarnings('ignore')
 
+
+# %%
+use_cuda
 
 # %%
 train = load_dataset('/local/data1/chash345/train')
@@ -83,7 +85,16 @@ prepared_valid = valid['train'].with_transform(preprocess)
 prepared_test = test['train'].with_transform(preprocess)
 
 # %%
-prepared_train
+prepared_test.format
+
+# %%
+prepared_test.features
+
+# %%
+prepared_test.set_format(type=prepared_test.format["type"], columns=list(prepared_test.features.keys()), transform= preprocess)
+
+# %%
+prepared_test.format
 
 # %%
 def collate_fn(batch):
@@ -103,34 +114,35 @@ def compute_metrics(p):
 
 # %%
 training_args = TrainingArguments(
-    output_dir= '/local/data1/chash345/vit16_w_o_augment_model/',
-    per_device_train_batch_size=16,
+    output_dir= '/local/data1/chash345/Vision-Transformer-Research-Project/vit16_w_o_augment',
+    seed=42,
+    per_gpu_train_batch_size=16,
     evaluation_strategy='steps',
-    num_train_epochs=50,
-    save_steps=300,
-    eval_steps=300,
+    num_train_epochs=15,
+    save_steps=100,
+    eval_steps=100,
     logging_steps=10,
-    learning_rate=2e-4,
+    learning_rate=1e-4,
     save_total_limit=2,
     remove_unused_columns=False,
     push_to_hub=False,
     load_best_model_at_end=True,
+    dataloader_pin_memory=False
 
 )
 
 # %%
-
+from transformers import ViTForImageClassification
 
 labels = train['train']['label']
 
 model = ViTForImageClassification.from_pretrained(
     model_name_or_path,
     num_labels = len(labels)
-)
+).to('cuda')
+
 
 # %%
-
-
 trainer = Trainer(
     model=model,
     args=training_args,
@@ -150,5 +162,82 @@ trainer.save_metrics('train', model_results.metrics)
 
 trainer.save_state()
 
+# %%
+model = ViTForImageClassification.from_pretrained('/local/data1/chash345/vit16_w_o_augment_model/checkpoint-1600', num_labels=2, ignore_mismatched_sizes=True )
+    
+
+training_args = TrainingArguments(
+    output_dir= '/local/data1/chash345/vit16_w_o_augment_model/checkpoint-1600',
+    per_device_train_batch_size=1,
+    num_train_epochs=1,
+    evaluation_strategy='steps',
+    save_strategy='steps',
+    remove_unused_columns=False,
+    push_to_hub=False,
+    load_best_model_at_end=True,
+    do_predict=True,
+    dataloader_pin_memory=False
+)
+
+trainer = Trainer(
+    model=model,
+    args=training_args,
+    data_collator=collate_fn,
+    compute_metrics=compute_metrics,
+    tokenizer=feature_extractor,
+)
+#trainer = Trainer(model=model)
+#trainer.model = model.cuda()
+prediction_test = trainer.predict(prepared_test)
+
+# %%
+prediction_test
+
+# %%
+import tensorflow as tf
+os.environ['CUDA_VISIBLE_DEVICES'] = '-1'
+
+# Hide GPU from visible devices
+tf.config.set_visible_devices([], 'GPU')
+
+# %%
+prediction = tf.round(tf.nn.sigmoid(prediction_test.predictions))
+
+# %%
+prediction
+prediction_test = np.argmax(prediction, 1)
+
+# %%
+y_true = test['train']['label']
+y_pred = prediction_test
+
+# %%
+confusion_matrix(y_true= y_true , y_pred=y_pred)
+
+# %%
+pd.DataFrame(classification_report(y_true, y_pred, output_dict=True)).T
+
+# %%
+# %%
+from sklearn.metrics import roc_auc_score, roc_curve, RocCurveDisplay, auc
+
+# %%
+fpr, tpr, thresholds = roc_curve(y_true, prediction_test )
+
+# %%
+# %%
+roc_auc_score(y_true , prediction_test )
+
+# %%
+roc_auc = auc(fpr, tpr)
+
+# %%
+import matplotlib.pyplot as plt
+display = RocCurveDisplay(fpr=fpr,tpr=tpr, roc_auc=roc_auc)
+display.plot()
+plt.show()
+
+# %% [markdown]
+# ### We see that Vision Transformer beats all other CNN models and gets the accuracy of around 90% on test set and AUROC of 0.81, considering a highly imabalanced dataset
 
 
