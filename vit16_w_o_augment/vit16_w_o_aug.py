@@ -115,8 +115,8 @@ def compute_metrics(p):
 # %%
 training_args = TrainingArguments(
     output_dir= '/local/data1/chash345/Vision-Transformer-Research-Project/vit16_w_o_augment',
-    seed=42,
-    per_gpu_train_batch_size=16,
+    seed=100,
+    per_device_train_batch_size=16,
     evaluation_strategy='steps',
     num_train_epochs=15,
     save_steps=100,
