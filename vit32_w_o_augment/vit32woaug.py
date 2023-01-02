@@ -1,12 +1,22 @@
-#!/usr/bin/env research
+# %%
 import pandas as pd
 import numpy as np
 import os
+import PIL
+import PIL.Image
 import glob, warnings
+import matplotlib.pyplot as plt
+
+from sklearn.metrics import confusion_matrix, classification_report
+from sklearn.metrics import roc_auc_score, roc_curve, RocCurveDisplay, auc
+
 from datasets import load_dataset
-from transformers import ViTFeatureExtractor
 from datasets import load_metric
+
+from transformers import ViTFeatureExtractor, AutoModelForImageClassification
 from transformers import TrainingArguments
+from transformers import ViTForImageClassification
+from transformers import Trainer
 
 
 import torch
@@ -25,6 +35,9 @@ use_cuda = torch.cuda.is_available()
 
 warnings.filterwarnings('ignore')
 
+
+# %%
+use_cuda
 
 # %%
 train = load_dataset('/local/data1/chash345/train')
@@ -63,11 +76,6 @@ device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 device
 
 # %%
-X_train = torch.FloatTensor([0., 1., 2.])
-X_train.is_cuda
-
-
-# %%
 def preprocess(batch):
     inputs = feature_extractor(
         batch['image'],
@@ -87,6 +95,9 @@ prepared_test = test['train'].with_transform(preprocess)
 prepared_train
 
 # %%
+prepared_test.set_format(type=prepared_test.format["type"], columns=list(prepared_test.features.keys()), transform= preprocess)
+
+# %%
 def collate_fn(batch):
     return{
         'pixel_values':torch.stack([x['pixel_values'] for x in batch]),
@@ -104,34 +115,32 @@ def compute_metrics(p):
 
 # %%
 training_args = TrainingArguments(
-    output_dir= '/local/data1/chash345/Vision-Transformer-Research-Project/vit32_w_o_augment',
+    output_dir= '/local/data1/chash345/vit32_w_o_augment_model',
+    seed=100,
     per_device_train_batch_size=16,
     evaluation_strategy='steps',
-    num_train_epochs=10,
-    save_steps=200,
-    eval_steps=200,
+    num_train_epochs=15,
+    save_steps=100,
+    eval_steps=100,
     logging_steps=10,
     learning_rate=1e-4,
     save_total_limit=2,
     remove_unused_columns=False,
     push_to_hub=False,
     load_best_model_at_end=True,
+    dataloader_pin_memory=False
 
 )
 
 # %%
-from transformers import ViTForImageClassification
-
 labels = train['train']['label']
 
 model = ViTForImageClassification.from_pretrained(
     model_name_or_path,
     num_labels = len(labels)
-)
+).to('cuda')
 
 # %%
-from transformers import Trainer
-
 trainer = Trainer(
     model=model,
     args=training_args,
@@ -151,7 +160,78 @@ trainer.save_metrics('train', model_results.metrics)
 
 trainer.save_state()
 
-trainer.predict(prepared_test)
+# %%
+model = ViTForImageClassification.from_pretrained('/local/data1/chash345/vit32_w_o_augment_model/checkpoint-1600', num_labels=2, ignore_mismatched_sizes=True )
+
+    
+
+training_args = TrainingArguments(
+    output_dir= '/local/data1/chash345/vit32_w_o_augment_model/checkpoint-1600',
+    per_device_train_batch_size=1,
+    num_train_epochs=1,
+    evaluation_strategy='steps',
+    save_strategy='steps',
+    remove_unused_columns=False,
+    push_to_hub=False,
+    load_best_model_at_end=True,
+    do_predict=True
+)
+
+trainer = Trainer(
+    model=model,
+    args=training_args,
+    data_collator=collate_fn,
+    compute_metrics=compute_metrics,
+    tokenizer=feature_extractor,
+)
+#trainer = Trainer(model=model)
+#trainer.model = model.cuda()
+prediction_test = trainer.predict(prepared_test)
+
+# %%
+prediction_test
+
+# %%
+import tensorflow as tf
+os.environ['CUDA_VISIBLE_DEVICES'] = '-1'
+
+# Hide GPU from visible devices
+tf.config.set_visible_devices([], 'GPU')
+
+# %%
+prediction = tf.round(tf.nn.sigmoid(prediction_test.predictions))
+
+# %%
+prediction
+prediction_test = np.argmax(prediction, 1)
+
+# %%
+y_true = test['train']['label']
+y_pred = prediction_test
+
+# %%
+confusion_matrix(y_true= y_true , y_pred=y_pred)
+
+# %%
+pd.DataFrame(classification_report(y_true, y_pred, output_dict=True)).T
+
+# %%
+
+fpr, tpr, thresholds = roc_curve(y_true, prediction_test )
+
+# %%
+# %%
+roc_auc_score(y_true , prediction_test )
+
+# %%
+roc_auc = auc(fpr, tpr)
+
+# %%
+display = RocCurveDisplay(fpr=fpr,tpr=tpr, roc_auc=roc_auc)
+display.plot()
+plt.show()
+
+# %%
 
 
 

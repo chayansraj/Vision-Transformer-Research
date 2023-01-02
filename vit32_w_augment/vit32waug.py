@@ -69,6 +69,8 @@ device
 X_train = torch.FloatTensor([0., 1., 2.])
 X_train.is_cuda
 
+
+# %%
 from torchvision.transforms import (CenterCrop, 
                                     Compose, 
                                     Normalize, 
@@ -133,15 +135,7 @@ prepared_valid
 prepared_test
 
 # %%
-# def preprocess(batch):
-#     inputs = feature_extractor(
-#         batch['image'],
-#         return_tensors = 'pt'
-#     ).to(device)
-
-#     inputs['label'] = batch['label']
-
-#     return inputs
+#prepared_test.set_format(type=prepared_test.format["type"], columns=list(prepared_test.features.keys()), transform= preprocess)
 
 # %%
 def collate_fn(batch):
@@ -161,18 +155,20 @@ def compute_metrics(p):
 
 # %%
 training_args = TrainingArguments(
-    output_dir= '/local/data1/chash345/Vision-Transformer-Research-Project/vit32_w_augment',
+    output_dir= '/local/data1/chash345/vit32_w_augment_model',
+    seed=100,
     per_device_train_batch_size=16,
     evaluation_strategy='steps',
-    num_train_epochs=10,
-    save_steps=200,
-    eval_steps=200,
+    num_train_epochs=25,
+    save_steps=100,
+    eval_steps=100,
     logging_steps=10,
-    learning_rate=1e-4,
+    learning_rate=2e-4,
     save_total_limit=2,
     remove_unused_columns=False,
     push_to_hub=False,
     load_best_model_at_end=True,
+    dataloader_pin_memory=False
 
 )
 
@@ -184,7 +180,7 @@ labels = train['train']['label']
 model = ViTForImageClassification.from_pretrained(
     model_name_or_path,
     num_labels = len(labels)
-)
+).to('cuda')
 
 # %%
 from transformers import Trainer
@@ -209,21 +205,20 @@ trainer.save_metrics('train', model_results.metrics)
 trainer.save_state()
 
 # %%
-model = AutoModelForImageClassification.from_pretrained('./checkpoint-1600/')
+model = ViTForImageClassification.from_pretrained('/local/data1/chash345/vit32_w_augment_model/checkpoint-1600', num_labels=2, ignore_mismatched_sizes=True )
+
+    
+
 training_args = TrainingArguments(
-    output_dir= '/local/data1/chash345/Vision-Transformer-Research-Project/vit32_w_augment',
-    per_device_train_batch_size=16,
+    output_dir= '/local/data1/chash345/vit32_w_augment_model/checkpoint-1600',
+    per_device_train_batch_size=1,
+    num_train_epochs=1,
     evaluation_strategy='steps',
-    num_train_epochs=10,
-    save_steps=200,
-    eval_steps=200,
-    logging_steps=10,
-    learning_rate=1e-4,
-    save_total_limit=2,
+    save_strategy='steps',
     remove_unused_columns=False,
     push_to_hub=False,
     load_best_model_at_end=True,
-
+    do_predict=True
 )
 
 trainer = Trainer(
@@ -231,8 +226,60 @@ trainer = Trainer(
     args=training_args,
     data_collator=collate_fn,
     compute_metrics=compute_metrics,
-    tokenizer=feature_extractor
+    tokenizer=feature_extractor,
 )
 #trainer = Trainer(model=model)
 #trainer.model = model.cuda()
-trainer.predict(prepared_test)
+prediction_test = trainer.predict(prepared_test)
+
+# %%
+prediction_test
+
+# %%
+import tensorflow as tf
+os.environ['CUDA_VISIBLE_DEVICES'] = '-1'
+
+# Hide GPU from visible devices
+tf.config.set_visible_devices([], 'GPU')
+
+# %%
+prediction = tf.round(tf.nn.sigmoid(prediction_test.predictions))
+
+# %%
+prediction
+prediction_test = np.argmax(prediction, 1)
+
+# %%
+y_true = test['train']['label']
+y_pred = prediction_test
+
+# %%
+confusion_matrix(y_true= y_true , y_pred=y_pred)
+
+# %%
+pd.DataFrame(classification_report(y_true, y_pred, output_dict=True)).T
+
+# %%
+# %%
+from sklearn.metrics import roc_auc_score, roc_curve, RocCurveDisplay, auc
+
+# %%
+fpr, tpr, thresholds = roc_curve(y_true, prediction_test )
+
+# %%
+# %%
+roc_auc_score(y_true , prediction_test )
+
+# %%
+roc_auc = auc(fpr, tpr)
+
+# %%
+import matplotlib.pyplot as plt
+display = RocCurveDisplay(fpr=fpr,tpr=tpr, roc_auc=roc_auc)
+display.plot()
+plt.show()
+
+# %%
+
+
+
