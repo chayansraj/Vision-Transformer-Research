@@ -1,4 +1,4 @@
-#!/usr/bin/env research
+# %%
 import pandas as pd
 import numpy as np
 import os
@@ -10,7 +10,7 @@ from datasets import load_dataset
 from transformers import ViTFeatureExtractor, AutoModelForImageClassification, AutoFeatureExtractor
 from datasets import load_metric
 from transformers import TrainingArguments
-
+from transformers import Trainer
 
 import torch
 from torch import nn, optim
@@ -28,6 +28,9 @@ use_cuda = torch.cuda.is_available()
 
 warnings.filterwarnings('ignore')
 
+
+# %%
+use_cuda
 
 # %%
 train = load_dataset('/local/data1/chash345/train')
@@ -158,9 +161,10 @@ def compute_metrics(p):
 # %%
 training_args = TrainingArguments(
     output_dir= '/local/data1/chash345/Vision-Transformer-Research-Project/vit16_w_augment',
+    seed=100,
     per_device_train_batch_size=16,
     evaluation_strategy='steps',
-    num_train_epochs=10,
+    num_train_epochs=15,
     save_steps=200,
     eval_steps=200,
     logging_steps=10,
@@ -169,6 +173,7 @@ training_args = TrainingArguments(
     remove_unused_columns=False,
     push_to_hub=False,
     load_best_model_at_end=True,
+    dataloader_pin_memory=False
 
 )
 
@@ -180,7 +185,7 @@ labels = train['train']['label']
 model = ViTForImageClassification.from_pretrained(
     model_name_or_path,
     num_labels = len(labels)
-)
+).to('cuda')
 
 # %%
 from transformers import Trainer
@@ -204,13 +209,85 @@ trainer.save_metrics('train', model_results.metrics)
 
 trainer.save_state()
 
-# %%
-trainer.predict(prepared_test)
-
 # %% [markdown]
 # #### We can see that the test accuracy is around 86% when we use Vision tranformer with 16 patches. Next, we will try different vit architectures.
 
-# %% [markdown]
-# 
+# %%
+model = ViTForImageClassification.from_pretrained('/local/data1/chash345/vit16w_augment_model/checkpoint-1200', num_labels=2, ignore_mismatched_sizes=True )
+
+    
+
+training_args = TrainingArguments(
+    output_dir= '/local/data1/chash345/vit16_w_augment_model/checkpoint-1200',
+    per_device_train_batch_size=1,
+    num_train_epochs=1,
+    evaluation_strategy='steps',
+    save_strategy='steps',
+    remove_unused_columns=False,
+    push_to_hub=False,
+    load_best_model_at_end=True,
+    do_predict=True
+)
+
+trainer = Trainer(
+    model=model,
+    args=training_args,
+    data_collator=collate_fn,
+    compute_metrics=compute_metrics,
+    tokenizer=feature_extractor,
+)
+#trainer = Trainer(model=model)
+#trainer.model = model.cuda()
+prediction_test = trainer.predict(prepared_test)
+
+# %%
+prediction_test
+
+# %%
+import tensorflow as tf
+os.environ['CUDA_VISIBLE_DEVICES'] = '-1'
+
+# Hide GPU from visible devices
+tf.config.set_visible_devices([], 'GPU')
+
+# %%
+prediction = tf.round(tf.nn.sigmoid(prediction_test.predictions))
+
+# %%
+prediction
+prediction_test = np.argmax(prediction, 1)
+
+# %%
+y_true = test['train']['label']
+y_pred = prediction_test
+
+# %%
+confusion_matrix(y_true= y_true , y_pred=y_pred)
+
+# %%
+pd.DataFrame(classification_report(y_true, y_pred, output_dict=True)).T
+
+# %%
+# %%
+from sklearn.metrics import roc_auc_score, roc_curve, RocCurveDisplay, auc
+
+# %%
+fpr, tpr, thresholds = roc_curve(y_true, prediction_test )
+
+# %%
+# %%
+roc_auc_score(y_true , prediction_test )
+
+# %%
+roc_auc = auc(fpr, tpr)
+
+# %%
+import matplotlib.pyplot as plt
+display = RocCurveDisplay(fpr=fpr,tpr=tpr, roc_auc=roc_auc)
+display.plot()
+plt.show()
+
+# %%
+
 
 
